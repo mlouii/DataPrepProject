@@ -1,0 +1,4 @@
+track,artist,uri,danceability,energy,key,loudness,mode,speechiness,acousticness,instrumentalness,liveness,valence,tempo,duration_ms,time_signature,chorus_hit,sections
+Hell Of A Life,Kanye West,spotify:track:3rCNmRonlHN1TXQLcG3dSk,0.449,0.813,8,-5.478,1,0.129,0.00142,0.000172,0.106,0.452,177.962,327787,4,48,12
+Paradise Circus,Massive Attack,spotify:track:2BndJYJQ17UcEeUFJP5JmY,0.81,0.591,8,-13.385,1,0.0638,0.414,0.799,0.072,0.297,136.028,297775,4,59,12
+Vide Noir,Lord Huron,spotify:track:1wCrEhvjzB8jSuBvJrsROp,0.715,0.948,10,-4.76,0,0.0469,0.151,0.193,0.0975,0.428,112.017,268560,4,59,12
