@@ -1,0 +1,74 @@
+---
+title: "Spotify Hits Prediction"
+output: html_notebook
+---
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+
+```{r}
+set.seed(100)
+curDir <- '/home/tinhc/Documents/GitHub/DataPrepProject'
+setwd(curDir)
+library(ggplot2)
+library(tidyverse)
+data.raw1 <- read.csv(file='dataset-of-00s.csv')
+data.raw2 <- read.csv(file='dataset-of-10s.csv')
+data.raw3 <- read.csv(file='dataset-of-60s.csv')
+data.raw4 <- read.csv(file='dataset-of-70s.csv')
+data.raw5 <- read.csv(file='dataset-of-80s.csv')
+data.raw6 <- read.csv(file='dataset-of-90s.csv')
+
+#Combine all data sorces together
+data.raw <- ( rbind(data.raw1,data.raw2) %>% rbind(data.raw3) %>% rbind(data.raw4)
+  %>% rbind(data.raw5) %>% rbind(data.raw6) )
+```
+
+```{r}
+class(data.raw)
+dim(data.raw)
+str(data.raw)
+
+#Check entire table for NA values
+table(is.na(data.raw))
+#See where NA values lies
+colSums(is.na(data.raw))
+#Omit NA values
+data.raw1<-na.omit(data.raw)
+#Get the summary of the dataset
+summary(data.raw)
+#Remove unnecessary columns
+data.raw<-data.raw %>% select(-c(track,artist,uri))
+```
+Compute the correlation matrix
+
+```{r}
+library(ggcorrplot)
+corr <- round(cor(data.raw),2)
+
+#Calculate the corelation between p-value
+pmat <- cor_pmat(data.raw)
+head(pmat)
+
+head(corr)
+#Visualize the correlation matrix
+ggcorrplot(corr)
+#Reduce the correlation matrix to keep only lower half with hierarchical order
+ggcorrplot(corr, hc.order = TRUE, type = "lower",
+     outline.col = "white")
+```
+```{r}
+# Add correlation significance level
+# Check-mark the no significant coefficient features
+ggcorrplot(corr, method='circle', hc.order = TRUE,
+    type = "lower", p.mat = pmat)
+```
+Now, we will explore some of the key features against our target value
+```{r}
+ggplot(data=data.raw)+geom_histogram(aes(x=duration_ms,fill=energy,color = 'red'), binwidth  = 1000)
+#ggplot(data.raw,aes(x=energy,y=target))+  geom_line()
+```
