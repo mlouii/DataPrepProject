@@ -9,12 +9,15 @@ When you save the notebook, an HTML file containing the code and output will be 
 
 The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
 
+'https://rstudio-pubs-static.s3.amazonaws.com/594440_b5a14885d559413ab6e57087eddd68e6.html'
+'https://docs.google.com/document/d/1i92D1-matJAphxoDAnobR28NwUT9rPpEPlZirv_4JpA/edit#heading=h.ijf9odsaw24a'
+
 
 ```{r}
 set.seed(100)
 curDir <- '/home/tinhc/Documents/GitHub/DataPrepProject'
 setwd(curDir)
-library(ggplot2)
+#library(ggplot2)
 library(tidyverse)
 data.raw1 <- read.csv(file='dataset-of-00s.csv')
 data.raw2 <- read.csv(file='dataset-of-10s.csv')
@@ -63,12 +66,84 @@ ggcorrplot(corr, hc.order = TRUE, type = "lower",
 ```
 ```{r}
 # Add correlation significance level
-# Check-mark the no significant coefficient features
+# Check-mark the no significant coefficient features based on p-value
 ggcorrplot(corr, method='circle', hc.order = TRUE,
     type = "lower", p.mat = pmat)
 ```
 Now, we will explore some of the key features against our target value
 ```{r}
-ggplot(data=data.raw)+geom_histogram(aes(x=duration_ms,fill=energy,color = 'red'), binwidth  = 1000)
-#ggplot(data.raw,aes(x=energy,y=target))+  geom_line()
+#Plot of top hit with duration.
+ggplot(data=data.raw,title='Correlation Matrix')+
+  geom_histogram(aes(x=duration_ms, fill="red"), binwidth  = 1000)+
+  ggtitle('Histogram distribution of Duration (ms)')  + 
+  labs(y = "Count", x = "Duration (ms)")
 ```
+Let see our distribution between energy and target
+```{r}
+#We have a Generalized Addictive Model (GAM) smoothing function here to see 
+#whether energy 
+ggplot(data = data.raw) + 
+  geom_point(mapping = aes(x = energy, y = target)) +
+  geom_smooth(mapping = aes(x = energy, y = target),method='gam')
+```
+Notice that we have duration and section pair are perfectly correlated, as well as energy and loudness. For a song to be longer, it will naturally contains more sections inside. The correlation between energy and loudness is also very common because a higher peak in energy will deliver a higher energy spectrum. Hence, we propose another set of data that drops duration and loudness.
+```{r}
+#Remove duration and loudness from our dataset. Called it dataset.adj
+data.adj<-data.raw %>% select(-c(duration_ms,loudness))
+```
+Now, we will use reticulate library, which will have an embedded pthon environment in R, to plot our variable.
+```{r}
+library(reticulate)
+use_python('/home/tinhc/anaconda3/bin/python')
+#importing required Python libraries/modules
+sns <- import('seaborn')
+plt <- import('matplotlib.pyplot')
+pd <- import('pandas')
+
+#building a seaborn pairplot using pairplot() part 1
+sns$pairplot(r_to_py(data.adj %>% select(c(danceability,energy,key,target))), hue = 'target')
+#display the plot
+plt$gcf()$set_size_inches(3, 4)
+plt$tight_layout()
+plt$show()
+plt$close('all')
+```
+
+```{r}
+#building a seaborn pairplot using pairplot() part 2
+sns$pairplot(r_to_py(data.adj %>% select(c(mode,speechiness,acousticness,target))), hue = 'target')
+#display the plot
+plt$gcf()$set_size_inches(3, 4)
+plt$tight_layout()
+plt$show()
+plt$close('all')
+```
+```{r}
+#building a seaborn pairplot using pairplot() part 3
+sns$pairplot(r_to_py(data.adj %>% select(c(instrumentalness,liveness,valence,target))), hue = 'target')
+#display the plot
+plt$gcf()$set_size_inches(3, 4)
+plt$tight_layout()
+plt$show()
+plt$close('all')
+```
+```{r}
+#building a seaborn pairplot using pairplot() part 4
+sns$pairplot(r_to_py(data.adj %>% select(c(valence,tempo,time_signature,target))), hue = 'target')
+#display the plot
+plt$gcf()$set_size_inches(3, 4)
+plt$tight_layout()
+plt$show()
+plt$close('all')
+```
+```{r}
+#building a seaborn pairplot using pairplot() part 5
+sns$pairplot(r_to_py(data.adj %>% select(c(chorus_hit,sections,target))), hue = 'target')
+#display the plot
+plt$gcf()$set_size_inches(3, 4)
+plt$tight_layout()
+plt$show()
+plt$close('all')
+```
+
+
