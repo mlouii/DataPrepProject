@@ -1,0 +1,82 @@
+```{r}
+library(caret)
+```
+
+```{r}
+set.seed(100)
+curDir <- '/Users/aakef/Documents/School/csp571/DataPrepProject'
+setwd(curDir)
+#library(ggplot2)
+library(tidyverse)
+data.raw1 <- read.csv(file='dataset-of-00s.csv')
+data.raw2 <- read.csv(file='dataset-of-10s.csv')
+data.raw3 <- read.csv(file='dataset-of-60s.csv')
+data.raw4 <- read.csv(file='dataset-of-70s.csv')
+data.raw5 <- read.csv(file='dataset-of-80s.csv')
+data.raw6 <- read.csv(file='dataset-of-90s.csv')
+
+#Combine all data sorces together
+data.raw <- ( rbind(data.raw1,data.raw2) %>% rbind(data.raw3) %>% rbind(data.raw4)
+  %>% rbind(data.raw5) %>% rbind(data.raw6) )
+```
+
+```{r}
+class(data.raw)
+dim(data.raw)
+str(data.raw)
+
+#Check entire table for NA values
+table(is.na(data.raw))
+#See where NA values lies
+colSums(is.na(data.raw))
+#Omit NA values
+data.raw1<-na.omit(data.raw)
+#Get the summary of the dataset
+summary(data.raw)
+#Remove unnecessary columns
+data.raw<-data.raw %>% select(-c(track,artist,uri))
+```
+
+```{r}
+trainIndex <- createDataPartition(data.raw$target, times=1, p=0.8, list=FALSE)
+train <- data.raw[trainIndex,]
+test <- data.raw[-trainIndex,]
+fitted <- glm(target~., data=data.raw, family = "binomial")
+```
+
+```{r}
+summary(fitted)
+```
+
+Danceability and Speechiness seem to most correlated with a song being a hit across time
+
+![]()
+
+```{r}
+data.raw3<-data.raw3 %>% select(-c(track,artist,uri))
+trainIndex6 <- createDataPartition(data.raw3$target, times=1, p=0.8, list=FALSE)
+train6 <- data.raw3[trainIndex6,]
+test6 <- data.raw3[-trainIndex6,]
+fitted6 <- glm(target~., data=data.raw3, family = "binomial")
+
+```
+
+```{r}
+summary(fitted6)
+```
+
+Speechiness was a lot more values in the 60s
+
+```{r}
+data.raw2<-data.raw2 %>% select(-c(track,artist,uri))
+trainIndex10 <- createDataPartition(data.raw2$target, times=1, p=0.8, list=FALSE)
+train10 <- data.raw2[trainIndex10,]
+test10 <- data.raw2[-trainIndex10,]
+fitted10 <- glm(target~., data=data.raw2, family = "binomial")
+```
+
+```{r}
+summary(fitted10)
+```
+
+In the 2010s dancebility and energy are a lot more popular than in the 60s
