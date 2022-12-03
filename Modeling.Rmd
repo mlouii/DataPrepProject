@@ -38,6 +38,10 @@ data.raw<-data.raw %>% select(-c(track,artist,uri))
 ```
 
 ```{r}
+data.raw$target
+```
+
+```{r}
 trainIndex <- createDataPartition(data.raw$target, times=1, p=0.8, list=FALSE)
 train <- data.raw[trainIndex,]
 test <- data.raw[-trainIndex,]
@@ -45,15 +49,40 @@ fitted <- glm(target~., data=data.raw, family = "binomial")
 ```
 
 ```{r}
-summary(fitted)
+summary(fitted)[["coefficients"]]
 ```
 
 Danceability and Speechiness seem to most correlated with a song being a hit across time
 
+```{r}
+probs <- predict(fitted,newdata=test, type = "response")
+preds <- ifelse(probs > 0.5, 1, 0)
+actuals = as.integer(test$target == 1, 1, 0)
+confusionMatrix(data=as.factor(preds), reference=as.factor(actuals))
+```
+
 ![]()
 
+Using all the variables we get a 72% accuracy
+
+Let's try retraining the model with variables that only got coeeficients \>= \|1\|
+
 ```{r}
-data.raw3<-data.raw3 %>% select(-c(track,artist,uri))
+trainIndex <- createDataPartition(data.raw$target, times=1, p=0.8, list=FALSE)
+train <- data.raw[trainIndex,]
+test <- data.raw[-trainIndex,]
+fitted_some <- glm(target~danceability+energy+speechiness+acousticness+instrumentalness, data=data.raw, family = "binomial")
+
+probs <- predict(fitted_some,newdata=test, type = "response")
+preds <- ifelse(probs > 0.5, 1, 0)
+actuals = as.integer(test$target == 1, 1, 0)
+confusionMatrix(data=as.factor(preds), reference=as.factor(actuals))
+```
+
+We get a slightly lower accuracy using a third of the features
+
+```{r}
+#data.raw3<-data.raw3 %>% select(-c(track,artist,uri))
 trainIndex6 <- createDataPartition(data.raw3$target, times=1, p=0.8, list=FALSE)
 train6 <- data.raw3[trainIndex6,]
 test6 <- data.raw3[-trainIndex6,]
@@ -62,13 +91,20 @@ fitted6 <- glm(target~., data=data.raw3, family = "binomial")
 ```
 
 ```{r}
-summary(fitted6)
+summary(fitted6)[["coefficients"]]
 ```
 
-Speechiness was a lot more values in the 60s
+Speechiness was a lot more valued in the 60s
 
 ```{r}
-data.raw2<-data.raw2 %>% select(-c(track,artist,uri))
+probs <- predict(fitted6,newdata=test, type = "response")
+preds <- ifelse(probs > 0.5, 1, 0)
+actuals = as.integer(test$target == 1, 1, 0)
+confusionMatrix(data=as.factor(preds), reference=as.factor(actuals))
+```
+
+```{r}
+#data.raw2<-data.raw2 %>% select(-c(track,artist,uri))
 trainIndex10 <- createDataPartition(data.raw2$target, times=1, p=0.8, list=FALSE)
 train10 <- data.raw2[trainIndex10,]
 test10 <- data.raw2[-trainIndex10,]
@@ -76,7 +112,14 @@ fitted10 <- glm(target~., data=data.raw2, family = "binomial")
 ```
 
 ```{r}
-summary(fitted10)
+summary(fitted10)[["coefficients"]]
 ```
 
 In the 2010s dancebility and energy are a lot more popular than in the 60s
+
+```{r}
+probs <- predict(fitted10,newdata=test, type = "response")
+preds <- ifelse(probs > 0.5, 1, 0)
+actuals = as.integer(test$target == 1, 1, 0)
+confusionMatrix(data=as.factor(preds), reference=as.factor(actuals))
+```
