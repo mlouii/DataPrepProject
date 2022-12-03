@@ -1,5 +1,8 @@
 ```{r}
 library(caret)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
 ```
 
 ```{r}
@@ -15,7 +18,39 @@ data.raw4 <- read.csv(file='dataset-of-70s.csv')
 data.raw5 <- read.csv(file='dataset-of-80s.csv')
 data.raw6 <- read.csv(file='dataset-of-90s.csv')
 
+
+
+wholeIndex <- createDataPartition(data.raw1$target, times=1, p=0.8, list=FALSE)
+FINAL_TEST.raw1<- data.raw1[-wholeIndex,]
+data.raw1 <- data.raw1[wholeIndex,]
+
+
+wholeIndex <- createDataPartition(data.raw2$target, times=1, p=0.8, list=FALSE)
+FINAL_TEST.raw2<- data.raw2[-wholeIndex,]
+data.raw2 <- data.raw2[wholeIndex,]
+
+wholeIndex <- createDataPartition(data.raw3$target, times=1, p=0.8, list=FALSE)
+FINAL_TEST.raw3 <- data.raw3[-wholeIndex,]
+data.raw3 <- data.raw3[wholeIndex,]
+
+wholeIndex <- createDataPartition(data.raw4$target, times=1, p=0.8, list=FALSE)
+FINAL_TEST.raw4<- data.raw4[-wholeIndex,]
+data.raw4 <- data.raw4[wholeIndex,]
+
+wholeIndex <- createDataPartition(data.raw5$target, times=1, p=0.8, list=FALSE)
+FINAL_TEST.raw5<- data.raw5[-wholeIndex,]
+data.raw5 <- data.raw5[wholeIndex,]
+
+wholeIndex <- createDataPartition(data.raw6$target, times=1, p=0.8, list=FALSE)
+FINAL_TEST.raw6<- data.raw6[-wholeIndex,]
+data.raw6 <- data.raw6[wholeIndex,]
+
+
 #Combine all data sorces together
+FINAL_TEST.raw <- ( rbind(FINAL_TEST.raw1,FINAL_TEST.raw2) %>% rbind(FINAL_TEST.raw3) %>% rbind(FINAL_TEST.raw4)
+  %>% rbind(FINAL_TEST.raw5) %>% rbind(FINAL_TEST.raw6) )
+
+
 data.raw <- ( rbind(data.raw1,data.raw2) %>% rbind(data.raw3) %>% rbind(data.raw4)
   %>% rbind(data.raw5) %>% rbind(data.raw6) )
 ```
@@ -35,10 +70,22 @@ data.raw1<-na.omit(data.raw)
 summary(data.raw)
 #Remove unnecessary columns
 data.raw<-data.raw %>% select(-c(track,artist,uri))
-```
+data.raw1<-data.raw1 %>% select(-c(track,artist,uri))
+data.raw2<-data.raw2 %>% select(-c(track,artist,uri))
+data.raw3<-data.raw3 %>% select(-c(track,artist,uri))
+data.raw4<-data.raw4 %>% select(-c(track,artist,uri))
+data.raw5<-data.raw5 %>% select(-c(track,artist,uri))
+data.raw6<-data.raw6 %>% select(-c(track,artist,uri))
 
-```{r}
-data.raw$target
+
+
+FINAL_TEST.raw<-FINAL_TEST.raw %>% select(-c(track,artist,uri))
+FINAL_TEST.raw1<-FINAL_TEST.raw1 %>% select(-c(track,artist,uri))
+FINAL_TEST.raw2<-FINAL_TEST.raw2 %>% select(-c(track,artist,uri))
+FINAL_TEST.raw3<-FINAL_TEST.raw3 %>% select(-c(track,artist,uri))
+FINAL_TEST.raw4<-FINAL_TEST.raw4 %>% select(-c(track,artist,uri))
+FINAL_TEST.raw5<-FINAL_TEST.raw5 %>% select(-c(track,artist,uri))
+FINAL_TEST.raw6<-FINAL_TEST.raw6 %>% select(-c(track,artist,uri))
 ```
 
 ```{r}
@@ -103,6 +150,8 @@ actuals = as.integer(test$target == 1, 1, 0)
 confusionMatrix(data=as.factor(preds), reference=as.factor(actuals))
 ```
 
+![]()
+
 ```{r}
 #data.raw2<-data.raw2 %>% select(-c(track,artist,uri))
 trainIndex10 <- createDataPartition(data.raw2$target, times=1, p=0.8, list=FALSE)
@@ -122,4 +171,33 @@ probs <- predict(fitted10,newdata=test, type = "response")
 preds <- ifelse(probs > 0.5, 1, 0)
 actuals = as.integer(test$target == 1, 1, 0)
 confusionMatrix(data=as.factor(preds), reference=as.factor(actuals))
+```
+
+Tree Models
+
+```{r}
+trainIndex_tree <- createDataPartition(data.raw$target, times=1, p=0.8, list=FALSE)
+train_tree <- data.raw[trainIndex_tree,]
+test_tree <- data.raw[-trainIndex_tree,]
+tree <-rpart(target~., data=train_tree, method="class")
+rpart.plot(tree)
+```
+
+With the tree model the most discriminatory feature was insturmentalness
+
+```{r}
+predst <- predict(tree,newdata=test_tree, type = "class")
+
+actualst = as.integer(test_tree$target == 1, 1, 0)
+confusionMatrix(data=as.factor(predst), reference=as.factor(actualst))
+```
+
+![]()Decision tree has a slightly better performance than the linear regression
+
+```{r}
+classifier_RF = randomForest(target~., data=train_tree)
+predst <- predict(classifier_RF,newdata=test_tree, type = "class")
+
+#actualst = as.integer(test_tree$target == 1, 1, 0)
+confusionMatrix(data=as.factor(predst), reference=as.factor(actualst))
 ```
