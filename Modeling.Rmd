@@ -3,6 +3,7 @@ library(caret)
 library(rpart)
 library(rpart.plot)
 library(randomForest)
+library(ROCR)
 ```
 
 ```{r}
@@ -192,20 +193,77 @@ With the tree model the most discriminatory feature was insturmentalness
 ```{r}
 predst <- predict(tree,newdata=test_tree, type = "class")
 
-actualst = as.integer(test_tree$target == 1, 1, 0)
+actualst = test_tree$target
 confusionMatrix(data=as.factor(predst), reference=as.factor(actualst))
 ```
 
 ![]()Decision tree has a slightly better performance than the linear regression
 
 ```{r}
-classifier_RF = randomForest(target~., data=train_tree, )
+train_tree$target = as.factor(train_tree$target)
 ```
 
 ```{r}
 
-predst <- as.integer(predict(classifier_RF,newdata=test_tree, type = "class"))
+classifier_RF = randomForest(target~., data=train_tree, ntree=100)
+```
 
-actualst = as.integer(test_tree$target == 1, 1, 0)
-confusionMatrix(data=as.factor(predst), reference=as.factor(actualst))
+```{r}
+
+predsrf <- as.factor(predict(classifier_RF,newdata=test_tree, type = "class"))
+
+#actualst = as.integer(test_tree$target == 1, 1, 0)
+confusionMatrix(data=(predsrf), reference=(as.factor(actualst)))
+```
+
+```{r}
+classifier_RF = randomForest(target~danceability+energy+speechiness+acousticness+instrumentalness, data=train_tree, ntree=100)
+```
+
+```{r}
+predsrf <- as.factor(predict(classifier_RF,newdata=test_tree, type = "class"))
+
+#actualst = as.integer(test_tree$target == 1, 1, 0)
+confusionMatrix(data=(predsrf), reference=(as.factor(actualst)))
+```
+
+```{r}
+final_probs <- predict(fitted_some,newdata=FINAL_TEST.raw, type = "response")
+final_preds<- ifelse(final_probs > 0.5, 1, 0)
+actuals = FINAL_TEST.raw$target
+confusionMatrix(data=as.factor(final_preds), reference=as.factor(actuals))
+```
+
+```{r}
+
+fpreds <- prediction(final_preds, actuals)
+roc = performance(fpreds,"tpr","fpr")
+plot(roc, colorize = T, lwd = 2)
+abline(a = 0, b = 1) 
+auc = performance(fpreds, measure = "auc")
+```
+
+```{r}
+auc@y.values
+```
+
+```{r}
+modern_test <- read.csv(file='test.csv')
+test_probs <- predict(fitted_some,newdata=modern_test, type = "response")
+test_preds<- ifelse(test_probs > 0.5, 1, 0)
+test_true <-  modern_test$target
+
+test_preds
+test_probs
+```
+
+```{r}
+test_probs6 <- predict(fitted6,newdata=modern_test, type = "response")
+test_preds6<- ifelse(test_probs6 > 0.5, 1, 0)
+test_preds6
+test_probs6 
+```
+
+```{r}
+modern_test
 ```
