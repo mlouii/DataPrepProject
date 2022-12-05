@@ -129,6 +129,10 @@ confusionMatrix(data=as.factor(preds), reference=as.factor(actuals))
 We get a slightly lower accuracy using a third of the features
 
 ```{r}
+summary(fitted_some)[["coefficients"]]
+```
+
+```{r}
 #data.raw3<-data.raw3 %>% select(-c(track,artist,uri))
 trainIndex6 <- createDataPartition(data.raw3$target, times=1, p=0.8, list=FALSE)
 train6 <- data.raw3[trainIndex6,]
@@ -195,9 +199,13 @@ confusionMatrix(data=as.factor(predst), reference=as.factor(actualst))
 ![]()Decision tree has a slightly better performance than the linear regression
 
 ```{r}
-classifier_RF = randomForest(target~., data=train_tree)
-predst <- predict(classifier_RF,newdata=test_tree, type = "class")
+classifier_RF = randomForest(target~., data=train_tree, )
+```
 
-#actualst = as.integer(test_tree$target == 1, 1, 0)
+```{r}
+
+predst <- as.integer(predict(classifier_RF,newdata=test_tree, type = "class"))
+
+actualst = as.integer(test_tree$target == 1, 1, 0)
 confusionMatrix(data=as.factor(predst), reference=as.factor(actualst))
 ```
