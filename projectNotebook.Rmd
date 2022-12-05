@@ -39,7 +39,7 @@ table(is.na(data.raw))
 #See where NA values lies
 colSums(is.na(data.raw))
 #Omit NA values
-data.raw1<-na.omit(data.raw)
+data.raw<-na.omit(data.raw)
 #Get the summary of the dataset
 summary(data.raw)
 #Remove unnecessary columns
@@ -61,14 +61,16 @@ head(corr)
 ggcorrplot(corr)
 #Reduce the correlation matrix to keep only lower half with hierarchical order
 ggcorrplot(corr, hc.order = TRUE, type = "lower",
-     outline.col = "white")
+     outline.col = "white")+
+  labs(title='Correlation matrix of our features')
 ```
 
 ```{r}
 # Add correlation significance level
 # Check-mark the no significant coefficient features based on p-value
 ggcorrplot(corr, method='circle', hc.order = TRUE,
-    type = "lower", p.mat = pmat)
+    type = "lower", p.mat = pmat)+
+  ggtitle('Correlation matrix with p-value significant cross out')
 ```
 
 Now, we will explore some of the key features against our target value
@@ -88,7 +90,8 @@ Let see our distribution between energy and target
 #whether energy 
 ggplot(data = data.raw) + 
   geom_point(mapping = aes(x = energy, y = target)) +
-  geom_smooth(mapping = aes(x = energy, y = target),method='gam')
+  geom_smooth(mapping = aes(x = energy, y = target),method='gam') +
+  ggtitle('Distribution between energy and target')
 ```
 
 Notice that we have duration and section pair are perfectly correlated, as well as energy and loudness. For a song to be longer, it will naturally contains more sections inside. The correlation between energy and loudness is also very common because a higher peak in energy will deliver a higher energy spectrum. Hence, we propose another set of data that drops duration and loudness.
@@ -97,62 +100,110 @@ Notice that we have duration and section pair are perfectly correlated, as well 
 #Remove duration and loudness from our dataset. Called it dataset.adj
 data.adj<-data.raw %>% select(-c(duration_ms,loudness))
 ```
+Using R code to plot pairwise charts
+```{r}
+library(GGally)
+pairplot1<-ggpairs(data.adj, 
+        columns = c('danceability','energy','key'),
+        aes(color= target, alpha = 0.5),
+        upper = list(continuous = wrap("density", alpha = 0.5), combo = "box"),
+        lower = list(continuous = wrap("points", alpha = 0.3), combo = wrap("dot", alpha = 0.4)),
+        diag = list(continuous = wrap("densityDiag")),
+        title = "Pair plot between features")+
+        scale_fill_manual(values=c('0'="#509BF5", '1'= "#EB1E32"))
+pairplot1
+```
 
-Now, we will use reticulate library, which will have an embedded pthon environment in R, to plot our variable.
+
+Now, we will use reticulate library, which will have an embedded pthon environment in R, to plot our variable.I
 
 ```{r}
-library(reticulate)
-use_python('/home/tinhc/anaconda3/bin/python')
-#importing required Python libraries/modules
-sns <- import('seaborn')
-plt <- import('matplotlib.pyplot')
-pd <- import('pandas')
-
-#building a seaborn pairplot using pairplot() part 1
-sns$pairplot(r_to_py(data.adj %>% select(c(danceability,energy,key,target))), hue = 'target')
-#display the plot
-plt$gcf()$set_size_inches(3, 4)
-plt$tight_layout()
-plt$show()
-plt$close('all')
+pairplot2<-ggpairs(data.adj, 
+        columns = c('mode','speechiness','acousticness'),
+        aes(color= target, alpha = 0.5),
+        upper = list(continuous = wrap("density", alpha = 0.5), combo = "box"),
+        lower = list(continuous = wrap("points", alpha = 0.3), combo = wrap("dot", alpha = 0.4)),
+        diag = list(continuous = wrap("densityDiag")),
+        title = "Pair plot between features")+
+        scale_fill_manual(values=c('0'="#509BF5", '1'= "#EB1E32"))
+pairplot2
 ```
 
 ```{r}
-#building a seaborn pairplot using pairplot() part 2
-sns$pairplot(r_to_py(data.adj %>% select(c(mode,speechiness,acousticness,target))), hue = 'target')
-#display the plot
-plt$gcf()$set_size_inches(3, 4)
-plt$tight_layout()
-plt$show()
-plt$close('all')
+pairplot3<-ggpairs(data.adj, 
+        columns = c('instrumentalness','liveness','valence'),
+        aes(color= target, alpha = 0.5),
+        upper = list(continuous = wrap("density", alpha = 0.5), combo = "box"),
+        lower = list(continuous = wrap("points", alpha = 0.3), combo = wrap("dot", alpha = 0.4)),
+        diag = list(continuous = wrap("densityDiag")),
+        title = "Pair plot between features")+
+        scale_fill_manual(values=c('0'="#509BF5", '1'= "#EB1E32"))
+pairplot3
+```
+
+
+```{r}
+pairplot4<-ggpairs(data.adj, 
+        columns = c('tempo','chorus_hit','sections'),
+        aes(color= target, alpha = 0.5),
+        upper = list(continuous = wrap("density", alpha = 0.5), combo = "box"),
+        lower = list(continuous = wrap("points", alpha = 0.3), combo = wrap("dot", alpha = 0.4)),
+        diag = list(continuous = wrap("densityDiag")),
+        title = "Pair plot between features")+
+        scale_fill_manual(values=c('0'="#509BF5", '1'= "#EB1E32"))
+pairplot4
 ```
 
 ```{r}
-#building a seaborn pairplot using pairplot() part 3
-sns$pairplot(r_to_py(data.adj %>% select(c(instrumentalness,liveness,valence,target))), hue = 'target')
-#display the plot
-plt$gcf()$set_size_inches(3, 4)
-plt$tight_layout()
-plt$show()
-plt$close('all')
+```
+Now, we will explore how some characteristics of the song over time. To do it, we need to create a dummy variable that represent times as our original dataset does not have such features.
+```{r}
+library(fastDummies)
+yr00 <- dummy_cols(data.raw1,select_columns="target",remove_first_dummy = TRUE)
+colnames(yr00)[20] <- "year"
+yr00$year[yr00$year == 0||yr00$year==1 ] <- '2000' 
+
+yr10 <- dummy_cols(data.raw2,select_columns="target",remove_first_dummy = TRUE)
+colnames(yr10)[20] <- "year"
+yr10$year[yr10$year == 0||yr10$year==1 ] <- '2010' 
+
+yr60 <- dummy_cols(data.raw3,select_columns="target",remove_first_dummy = TRUE)
+colnames(yr60)[20] <- "year"
+yr60$year[yr60$year == 0||yr60$year==1 ] <- '1960'
+
+yr70 <- dummy_cols(data.raw4,select_columns="target",remove_first_dummy = TRUE)
+colnames(yr70)[20] <- "year"
+yr70$year[yr70$year == 0||yr70$year==1 ] <- '1970'
+
+yr80 <- dummy_cols(data.raw5,select_columns="target",remove_first_dummy = TRUE)
+colnames(yr80)[20] <- "year"
+yr80$year[yr80$year == 0||yr80$year==1 ] <- '1980'
+
+yr90 <- dummy_cols(data.raw6,select_columns="target",remove_first_dummy = TRUE)
+colnames(yr90)[20] <- "year"
+yr90$year[yr90$year == 0||yr90$year==1 ] <- '1990'
+
+#Combine all data sorces together
+data.yr <- ( rbind(yr00,yr10) %>% rbind(yr60) %>% rbind(yr70)
+  %>% rbind(yr80) %>% rbind(yr90) )
 ```
 
 ```{r}
-#building a seaborn pairplot using pairplot() part 4
-sns$pairplot(r_to_py(data.adj %>% select(c(valence,tempo,time_signature,target))), hue = 'target')
-#display the plot
-plt$gcf()$set_size_inches(3, 4)
-plt$tight_layout()
-plt$show()
-plt$close('all')
+#Counting the energy and plot it over time
+yearly_counts <- data.yr %>%
+  count(year, energy)
+ggplot(data = yearly_counts, aes(x = year, y = n, color = energy)) +
+  ggtitle('Bar chart of energy level and its popularity over time')+
+  geom_bar(stat='identity')
+  
+```
+Now, we will see whether the trends persisted for tempo
+```{r}
+#Counting the energy and plot it over time
+yearly_counts2 <- data.yr %>%
+  count(year, tempo)
+ggplot(data = yearly_counts2, aes(x = year, y = n, color = tempo)) +
+  ggtitle('Bar chart of tempo level and its popularity over time')+
+  geom_bar(stat='identity')
 ```
 
-```{r}
-#building a seaborn pairplot using pairplot() part 5
-sns$pairplot(r_to_py(data.adj %>% select(c(chorus_hit,sections,target))), hue = 'target')
-#display the plot
-plt$gcf()$set_size_inches(3, 4)
-plt$tight_layout()
-plt$show()
-plt$close('all')
-```
